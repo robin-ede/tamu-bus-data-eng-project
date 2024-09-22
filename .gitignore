@@ -1,0 +1,11 @@
+# Ignore Airflow configuration files
+airflow.cfg
+unittests.cfg
+.ipynb_checkpoints/
+iframe_figures/
+logs/
+*.log
+__pycache__/
+*.pyc
+venv/
+.env
