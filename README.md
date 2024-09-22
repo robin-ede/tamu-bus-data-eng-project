@@ -1,198 +1,138 @@
-# Bus Data Engineering Project
+# Texas A&M Bus Data Engineering Project
 
-## Overview
+## Introduction
 
-This project is a data engineering pipeline designed to collect, process, and visualize real-time bus transit data for your university's bus system. Utilizing Apache Airflow orchestrated via Docker and Docker Compose, the pipeline performs the following tasks:
+This project aims to build a scalable, automated data pipeline for collecting, processing, and visualizing real-time bus transit data for **Texas A&M University's bus system**. The project utilizes Apache Airflow for orchestration, Docker for deployment, and Azure Cosmos DB for data storage. By leveraging cloud technologies and automation, the system processes live bus data efficiently and provides interactive visualizations for analysis.
 
-1. **Retrieve Route Data**: Fetches active route keys, named and unnamed stops.
-2. **Fetch and Process Bus Data**: Gathers bus position data, including velocity, bearing, capacity, amenities, and associated route information.
-3. **Upload to Cosmos DB**: Stores the processed data in Azure Cosmos DB for scalable access and querying.
-
-An MVP (Minimum Viable Product) is included as a Jupyter Notebook that allows users to visualize bus routes and positions on an interactive map at a given timestamp using Plotly and the Azure Cosmos SDK.
-
-## Architecture
-
+## Architecture Diagram
 ![Architecture Diagram](images/architecture_diagram.png)
 
-The project leverages Apache Airflow orchestrated through Docker and Docker Compose to manage data retrieval and processing tasks. The high-level workflow is as follows:
+## Project Goals
 
-1. **Task: Get Route Keys**
-   - Retrieves active route information.
-   - Stores route data temporarily for downstream tasks.
+The primary objectives of this project are:
+1. **Automate Data Collection**: Automate the retrieval of real-time bus data (routes, stops, and vehicle positions) for Texas A&M’s bus system using Apache Airflow.
+2. **Data Processing & Storage**: Process the bus data and store it in **Azure Cosmos DB** for easy access and querying.
+3. **Interactive Visualization**: Provide an easy-to-use Jupyter Notebook for visualizing bus routes and positions at any given timestamp, enabling users to analyze Texas A&M's bus operations in real time.
+4. **Scalability & Modularity**: Ensure the pipeline is modular and scalable, allowing for the addition of new data sources or further processing as needed.
 
-2. **Task: Fetch and Process Bus Data**
-   - Uses route data to fetch real-time bus information.
-   - Processes data to extract relevant attributes.
-   - Appends the scheduled task time to each vehicle's data for timestamping.
-   - Stores processed data temporarily for uploading.
+## Technologies Used
 
-3. **Task: Upload to Cosmos DB**
-   - Uploads the processed stop and vehicle data to Azure Cosmos DB using an Airflow connection named `cosmos-db`.
-   - Cleans up temporary files to maintain optimal storage usage.
+- **Apache Airflow**: For task orchestration and pipeline automation.
+- **Docker & Docker Compose**: For containerization and simplifying deployment.
+- **Azure Cosmos DB**: For scalable, cloud-based data storage.
+- **Python**: For data retrieval, processing, and analysis.
+- **Plotly**: For creating interactive visualizations of bus routes and positions.
+- **Jupyter Notebook**: For analyzing and visualizing the data in an easy-to-use format.
 
-## Features
+## How It Works
 
-- **Dockerized Airflow Setup**: Simplifies deployment and scaling using Docker and Docker Compose.
-- **Automated Data Pipeline**: Fully automated data ingestion and processing using Apache Airflow.
-- **Real-Time Data Processing**: Fetches live bus data for up-to-date information on the university's bus system.
-- **Scalable Data Storage**: Utilizes Azure Cosmos DB for efficient and scalable data storage.
-- **Interactive Visualization**: Provides a Jupyter Notebook for mapping buses and routes using Plotly.
-- **Modular Design**: Clean separation of tasks for easy maintenance and scalability.
+### Data Pipeline
 
-## Getting Started
+The data pipeline is managed by Apache Airflow, which automates the following tasks:
+
+1. **Retrieve Route Data**: The pipeline first gathers active route data for Texas A&M’s bus system, including route keys, named and unnamed bus stops.
+2. **Fetch and Process Bus Data**: It then fetches real-time bus data, including vehicle position, speed, capacity, and amenities. Each vehicle record is timestamped with the scheduled task time for easy querying.
+3. **Upload to Cosmos DB**: The processed data is uploaded to Azure Cosmos DB, where it is stored for future querying and visualization.
+
+### Cosmos DB Configuration
+
+The data is stored in Azure Cosmos DB with the following structure:
+- **Database Name**: `bus_data`
+- **Container for Vehicle Data**: `vehicle_data`
+- **Container for Stop Data**: `stop_data`
+
+You can change the database or container names by modifying the **`dags/upload.py`** file:
+```python
+DATABASE_NAME = 'bus_data'
+CONTAINER_NAME_VEHICLES = 'vehicle_data'
+CONTAINER_NAME_STOPS = 'stop_data'
+```
+
+### Interactive Visualization
+
+A Jupyter Notebook is provided to visualize the bus routes and vehicle positions on an interactive map. The notebook allows users to select a specific timestamp and query the corresponding data from Cosmos DB.
+
+## How to Set Up
 
 ### Prerequisites
 
-- **Docker**
-- **Docker Compose**
-- **Azure Account**: For Cosmos DB.
-- **Jupyter Notebook**
-- **Azure Cosmos SDK for Python**
-- **Plotly**
+1. **Docker** and **Docker Compose** installed on your machine.
+2. **Azure Cosmos DB**: You need an Azure account and a Cosmos DB instance.
+3. **Python environment**: For running the Jupyter Notebook.
 
-### Installation
+### Installation Steps
 
 1. **Clone the Repository**
-
    ```bash
    git clone https://github.com/yourusername/bus-data-engineering.git
    cd bus-data-engineering
    ```
 
-2. **Configure Environment Variables**
+2. **Build and Start the Docker Containers**
+   ```bash
+   docker-compose up -d
+   ```
 
-   - Create a `.env` file in the project root directory to store environment variables required for Airflow and Azure Cosmos DB connections.
+3. **Verify Airflow is Running**
+   - Open your browser and go to `http://localhost:8080`.
+   - Set up default credentials for the Airflow UI.
 
-     ```env
-     AIRFLOW__CORE__LOAD_EXAMPLES=False
-     AIRFLOW_UID=50000
+4. **Configure Airflow Connections**
+   - In the Airflow UI, create a connection named `cosmos-db` using the **HTTP** type.
+   - Enter your Cosmos DB URL in the **Host** field and the Primary Key in the **Password** field.
 
-     # Azure Cosmos DB Configuration
-     AZURE_COSMOS_ACCOUNT_URI=your_cosmos_db_uri
-     AZURE_COSMOS_ACCOUNT_KEY=your_cosmos_db_key
-     ```
-
-3. **Set Up Airflow Connections**
-
-   - In Airflow, set up a connection named `cosmos-db` to store the Cosmos DB variables.
-   - Since the built-in Azure Cosmos DB connection type may not work, set the connection type to **HTTP** and store the necessary credentials in the **Extra** field in JSON format.
-
-     ```json
-     {
-       "account_uri": "your_cosmos_db_uri",
-       "account_key": "your_cosmos_db_key",
-       "database_name": "your_database_name",
-       "container_name": "your_container_name"
-     }
-     ```
-
-4. **Build and Start the Docker Containers**
-
-   - Build the Docker images and start the services using Docker Compose.
-
-     ```bash
-     docker-compose up -d --build
-     ```
-
-   - This will start the following services:
-     - **Airflow Scheduler**
-     - **Airflow Webserver**
-     - **Airflow Worker**
-     - **Airflow Triggerer**
-     - **Airflow Postgres Database**
-     - **Airflow Redis**
-
-5. **Verify Airflow is Running**
-
-   - Access the Airflow web interface at `http://localhost:8080`.
-   - The default credentials are:
-     - **Username**: `airflow`
-     - **Password**: `airflow`
-
-## Usage
-
-### Airflow DAG
-
-1. **Deploy the DAG**
-
-   - Place your DAG files in the `dags/` directory. Since the `dags/` folder is mounted as a volume in the Docker Compose file, Airflow will automatically detect and load the DAG.
-
-     ```bash
-     cp dags/*.py ./dags/
-     ```
-
-2. **Trigger the DAG**
-
-   - Access the Airflow web interface at `http://localhost:8080`.
-   - Locate the `bus_data_pipeline` DAG.
-   - Trigger it manually or set it to run on a schedule.
-
-### Data Visualization
-
-1. **Install Python Dependencies**
-
-   - Activate your Python environment and install necessary packages for data visualization.
-
-     ```bash
-     pip install -r requirements.txt
-     ```
-
-2. **Launch Jupyter Notebook**
-
+5. **Launch the Jupyter Notebook**
    ```bash
    jupyter notebook
    ```
-
-3. **Open the Visualization Notebook**
-
-   - Open `plotting.ipynb`.
-   - Update the notebook with your Cosmos DB connection details.
-   - Run the notebook to generate interactive maps of bus routes and positions.
-
-     ![Sample Bus Route Visualization](images/bus_route_visualization.png)
-     *Alt text: Screenshot of an interactive map displaying bus routes and positions using Plotly.*
+   Open `plotting.ipynb` in the Jupyter interface and modify the connection details and database info as needed.
 
 
+## **Project Structure**:
 
-## Configuration
+```
+bus-data-engineering/
+│
+├── .gitignore                   # Ignore cache, virtual env, etc.
+├── docker-compose.yaml          # Docker Compose setup for Airflow
+├── Dockerfile                   # Dockerfile for building Airflow environment
+├── README.md                    # Project overview and setup guide
+├── requirements.txt             # Python dependencies for visualization
+├── plotting.ipynb               # Jupyter Notebook for visualizing bus data
+│
+├── dags/                        # Airflow DAGs and scripts
+│   ├── bus_data_pipeline.py     # Main DAG for data pipeline
+│   ├── get_bus.py               # Fetches and processes bus data
+│   ├── get_route.py             # Retrieves route and stop data
+│   └── upload.py                # Uploads processed data to Cosmos DB
+│
+├── images/                      # Documentation images
+│   ├── architecture_diagram.png # Architecture diagram
+│   └── bus_route_visualization.png # Example visualization
+│
+└── sample_data/                 # Sample bus and vehicle data
+    ├── bus_stops.csv            # Bus stop sample data
+    └── vehicles.csv             # Vehicle sample data
+```
 
-### Airflow Connection for Azure Cosmos DB
+### **Key Points**:
+- **Airflow DAGs**: All pipeline-related scripts are in the `dags/` folder.
+- **Visualization**: The Jupyter Notebook (`plotting.ipynb`) provides an interactive map of bus routes and positions.
+- **Images**: The `images/` directory holds documentation visuals.
+- **Sample Data**: `sample_data/` contains example CSV files of the data handled by the pipeline.
 
-- **Connection ID**: `cosmos-db`
-- **Connection Type**: `HTTP`
-- **Host**: Leave blank
-- **Extra**:
+## Results
 
-  ```json
-  {
-    "account_uri": "your_cosmos_db_uri",
-    "account_key": "your_cosmos_db_key",
-    "database_name": "your_database_name",
-    "container_name": "your_container_name"
-  }
-  ```
+After setting up and running the pipeline, the following outputs are generated:
 
-In your Airflow tasks, you can retrieve the connection and use the stored credentials to interact with Azure Cosmos DB.
+1. **Real-Time Bus Data**: The system continuously collects and stores bus route and vehicle data for Texas A&M’s bus system in Azure Cosmos DB.
+2. **Interactive Map Visualizations**: Using the provided Jupyter Notebook, users can visualize bus routes and positions at specific timestamps, view bus information such as speed, heading, and capacity, and analyze the system in real time.
+   
+   ![Sample Bus Route Visualization](images/bus_route_visualization.png)
 
-### Environment Variables
+## Future Work
 
-- **AIRFLOW__CORE__LOAD_EXAMPLES**: Set to `False` to prevent loading example DAGs.
-- **AIRFLOW_UID**: Set to your user ID (e.g., `50000`).
-
-Store these in your `.env` file.
-
-## Dependencies
-
-- **Docker**
-- **Docker Compose**
-- **Apache Airflow**
-- **Azure Cosmos SDK**
-- **Plotly**
-- **Requests**
-- **Python Packages**:
-
-  Install all Python dependencies using:
-
-  ```bash
-  pip install -r requirements.txt
-  ```
+1. **Enhance Visualization**: Improve the visual representation of the bus stops and routes using custom SVG icons or integrate with third-party visualization tools like Folium.
+2. **Data Analysis & Prediction**: Add advanced data analysis tasks, such as predicting bus arrival times or monitoring route efficiency.
+3. **Expand Data Sources**: Incorporate additional transit systems or traffic data to enhance the scope of the project.
+4. **Optimize for Scale**: Implement more efficient data storage and querying methods to handle larger datasets as the system scales.
