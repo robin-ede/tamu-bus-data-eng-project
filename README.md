@@ -13,7 +13,6 @@ An MVP (Minimum Viable Product) is included as a Jupyter Notebook that allows us
 ## Architecture
 
 ![Architecture Diagram](images/architecture_diagram.png)
-*Alt text: Diagram illustrating the data pipeline from data ingestion to visualization.*
 
 The project leverages Apache Airflow orchestrated through Docker and Docker Compose to manage data retrieval and processing tasks. The high-level workflow is as follows:
 
