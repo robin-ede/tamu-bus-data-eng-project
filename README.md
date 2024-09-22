@@ -64,8 +64,8 @@ A Jupyter Notebook is provided to visualize the bus routes and vehicle positions
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/yourusername/bus-data-engineering.git
-   cd bus-data-engineering
+   git clone https://github.com/robin-ede/tamu-bus-data-eng-project.git
+   cd tamu-bus-data-eng-project
    ```
 
 2. **Build and Start the Docker Containers**
